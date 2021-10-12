@@ -80,6 +80,13 @@ class HuggingFaceDatasetReader(DatasetReader):
                                                            percentage=percentage),
                                    **kwargs)
             dataset = [dataset_split.map(preprocess_boolq, batched=True) for dataset_split in dataset]
+        elif path == "russian_super_glue" and name == "danetqa":
+            dataset = load_dataset(path=path,
+                                   name=name,
+                                   split=interleave_splits(splits=list(split_mapping.values()),
+                                                           percentage=percentage),
+                                   **kwargs)
+            dataset = [dataset_split.map(preprocess_boolq, batched=True) for dataset_split in dataset]
         elif path == "super_glue" and name == "record":
             label_column = "label"
             dataset = [
