@@ -107,9 +107,12 @@ class StreamSpacyTokenizer(Component):
             TypeError: If the first element of ``batch`` is neither List, nor str.
 
         """
+        print('batch @ tokenizer', batch)
         if isinstance(batch[0], str):
             if self.lemmas:
-                return list(self._lemmatize(batch))
+                test = list(self._lemmatize(batch))
+                print('lemmas: ', test)
+                return test
             else:
                 return list(self._tokenize(batch))
         if isinstance(batch[0], list):
@@ -220,3 +223,12 @@ class StreamSpacyTokenizer(Component):
 
         """
         self.stopwords = stopwords
+
+
+def main():
+    t = StreamSpacyTokenizer(spacy_model='en_core_web_sm', lemmas=True)
+    print(t(['a', 'I like swimming']))
+
+
+if __name__ == '__main__':
+    main()

@@ -57,14 +57,14 @@ class ZhenyaReader(DatasetReader):
         """
         data_types = ["trn", "val", "tst"]
 
-        data = {"trn": [],
-                "val": [],
-                "tst": []}
-        print(Path(__file__).resolve())
+        data = {"train": [],
+                "valid": [],
+                "test": []}
         for data_type in data_types:
             file_name = kwargs.get(data_type, 'dstc2-{}.{}'.format(data_type, format))
             if file_name is None:
                 continue
+            data_type = {'trn': 'train', 'val': 'valid', 'tst': 'test'}[data_type]
 
             file = Path(data_path).joinpath(file_name)
             if file.exists():
@@ -79,8 +79,10 @@ class ZhenyaReader(DatasetReader):
                     df = pd.read_json(file, **options)
                 else:
                     raise Exception('Unsupported file format: {}'.format(format))
+                df['act'] = df['dialog_acts'].apply(lambda x: x[0]['act'])
+                df = df[(df['speaker'] == 2) & (df['act'] != 'api_call')]
 
-                data[data_type] = [(row['text'], row['dialog_acts'][0]['act']) for _, row in df.iterrows()]
+                data[data_type] = [(row['text'], row['act'].split('+')) for _, row in df.iterrows()]
             else:
                 log.warning("Cannot find {} file".format(file))
 
@@ -90,7 +92,6 @@ class ZhenyaReader(DatasetReader):
 def main():
     reader = ZhenyaReader()
     data = reader.read('/mnt/c/Users/User/Женя/GitHub/DeepPavlov/zhenya_dataset')
-    print(data)
 
 
 if __name__ == '__main__':

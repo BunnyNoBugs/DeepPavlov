@@ -16,6 +16,7 @@ from typing import List, Union, Optional
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 
 class ShallowAndWideCnn(nn.Module):
@@ -72,3 +73,44 @@ class ShallowAndWideCnn(nn.Module):
         output = self.dropout(output)
         output = self.final_dense(output)
         return output
+
+
+class ZhenyaClassifier(nn.Module):
+    def __init__(self, n_classes: int, embedding_size: int, hidden_size: int, n_pad: int, embedded_tokens: bool = True,
+                 dropout_rate: float = 0.0, num_layers: int = 1, vocab_size: Optional[int] = None, **kwargs):
+        super().__init__()
+        self.embedded_tokens = embedded_tokens
+        self.n_pad = n_pad
+
+        if not embedded_tokens:
+            raise NotImplementedError
+
+        self.embedding = nn.Embedding(vocab_size, embedding_size)
+        self.lstm = nn.LSTM(embedding_size, hidden_size, num_layers=num_layers)
+        self.dropout = nn.Dropout(dropout_rate)
+        self.fc = nn.Linear(hidden_size * self.n_pad, n_classes)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # x of shape [batch_size, number of tokens]
+        x = x.long()
+        x = F.pad(x, (0, self.n_pad - x.shape[-1]))
+
+        embed = self.embedding(x)
+        lstm_output, _ = self.lstm(embed)
+        output = self.dropout(lstm_output)
+        output = output.contiguous().view(output.shape[0], -1)
+        # output of shape [batch_size, *]
+        output = self.fc(output)
+
+        return output
+
+
+def main():
+    # model = ZhenyaClassifier(n_classes=3, embedding_size=100, hidden_size=3, n_pad=3, vocab_size=100)
+    # print(model(torch.IntTensor([[1, 2, 1]])))
+    model = ShallowAndWideCnn(1, 10, [2], 2, 10)
+    print(model(torch.empty([5, 5, 10])).shape)
+
+
+if __name__ == '__main__':
+    main()

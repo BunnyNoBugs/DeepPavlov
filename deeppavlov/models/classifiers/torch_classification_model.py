@@ -23,7 +23,7 @@ import torch.nn as nn
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.torch_model import TorchModel
 from deeppavlov.core.common.registry import register
-from .torch_nets import ShallowAndWideCnn
+from .torch_nets import ShallowAndWideCnn, ZhenyaClassifier
 
 log = logging.getLogger(__name__)
 
@@ -171,7 +171,8 @@ class TorchTextClassificationModel(TorchModel):
 
         # forward + backward + optimize
         outputs = self.model(inputs)
-        labels = labels.view(-1).long()
+        # outputs = outputs.view(-1)
+        # labels = labels.view(-1).long()
         loss = self.criterion(outputs, labels)
         loss.backward()
         self.optimizer.step()
@@ -198,4 +199,12 @@ class TorchTextClassificationModel(TorchModel):
                                   dense_size=dense_size, dropout_rate=dropout_rate,
                                   embedded_tokens=self.opt["embedded_tokens"],
                                   vocab_size=self.opt["vocab_size"])
+        return model
+
+    def zhenya_model(self, hidden_size: int, n_pad: int, dropout_rate: float = 0.0, num_layers: int = 1,
+                     **kwargs):
+        """Return Zhenya classification model"""
+        model = ZhenyaClassifier(n_classes=self.opt["n_classes"], embedding_size=self.opt["embedding_size"],
+                                 hidden_size=hidden_size, n_pad=n_pad, embedded_tokens=self.opt['embedded_tokens'],
+                                 dropout_rate=dropout_rate, num_layers=num_layers, vocab_size=self.opt["vocab_size"])
         return model

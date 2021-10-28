@@ -177,3 +177,17 @@ class SimpleVocabulary(Estimator):
 
     def idxs2toks(self, idxs):
         return [self[idx] for idx in idxs]
+
+
+def main():
+    v = SimpleVocabulary(
+        save_path='~/.deeppavlov/test/simple_vocab.dict'
+    )
+    v.fit(['a'], ['a', 'b   '])
+    print(v('a'))
+    print(v('b'))
+    print(v._i2t)
+
+
+if __name__ == '__main__':
+    main()

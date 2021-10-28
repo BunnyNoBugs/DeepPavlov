@@ -205,3 +205,12 @@ class RussianTokenizer(Component):
 
        """
         self.stopwords = stopwords
+
+
+def main():
+    t = RussianTokenizer(lemmas=True)
+    t(['Мама мыла раму'])
+
+
+if __name__ == '__main__':
+    main()
