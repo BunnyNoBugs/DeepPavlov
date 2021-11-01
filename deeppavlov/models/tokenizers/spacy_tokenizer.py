@@ -226,8 +226,8 @@ class StreamSpacyTokenizer(Component):
 
 
 def main():
-    t = StreamSpacyTokenizer(spacy_model='en_core_web_sm', lemmas=True)
-    print(t(['a', 'I like swimming']))
+    t = StreamSpacyTokenizer(spacy_model='ru_core_news_sm', lemmas=True)
+    print(t(['a', 'Мама мыла раму']))
 
 
 if __name__ == '__main__':
