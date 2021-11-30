@@ -130,3 +130,6 @@ download/
 /Dockerfile
 /entrypoint.sh
 /.dockerignore
+
+#winogrande test
+/winogrande_test
