@@ -1,0 +1,97 @@
+{
+  "dataset_reader": {
+    "class_name": "deeppavlov.dataset_readers.winogrande_reader:WinograndeReader",
+    "data_path": "/home/bunnynobugs/DeepPavlov/winogrande_test/winogrande_1.1",
+    "train": "train_m",
+    "valid": "dev",
+    "test": "test"
+  },
+  "dataset_iterator": {
+    "class_name": "deeppavlov.dataset_iterators.winogrande_iterator:WinograndeIterator",
+    "features": ["sentences", "options"],
+    "label": "answer",
+    "seed": 42
+  },
+  "chainer": {
+    "in": ["sentences_list", "options_list"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "class_name": "torch_transformers_multiplechoice_preprocessor",
+        "vocab_file": "{BASE_MODEL}",
+        "do_lower_case": false,
+        "max_seq_length": 64,
+        "in": ["sentences_list", "options_list"],
+        "out": ["bert_features"]
+      },
+      {
+        "id": "classes_vocab",
+        "class_name": "simple_vocab",
+        "fit_on": ["y"],
+        "save_path": "{MODEL_PATH}/classes.dict",
+        "load_path": "{MODEL_PATH}/classes.dict",
+        "in": ["y"],
+        "out": ["y_ids"]
+      },
+      {
+        "in": ["y_ids"],
+        "out": ["y_onehot"],
+        "class_name": "one_hotter",
+        "depth": "#classes_vocab.len",
+        "single_vector": true
+      },
+      {
+        "class_name": "torch_transformers_multiplechoice",
+        "n_classes": "#classes_vocab.len",
+        "return_probas": true,
+        "pretrained_bert": "{BASE_MODEL}",
+        "save_path": "{MODEL_PATH}/model",
+        "load_path": "{MODEL_PATH}/model",
+        "optimizer": "AdamW",
+        "optimizer_parameters": {
+          "lr": 2e-05
+        },
+        "learning_rate_drop_patience": 3,
+        "learning_rate_drop_div": 2.0,
+        "in": ["bert_features"],
+        "in_y": ["y_ids"],
+        "out": ["y_pred_probas"]
+      },
+      {
+        "in": ["y_pred_probas"],
+        "out": ["y_pred_ids"],
+        "class_name": "proba2labels",
+        "max_proba": true
+      },
+      {
+        "in": ["y_pred_ids"],
+        "out": ["y_pred_labels"],
+        "ref": "classes_vocab"
+      }
+    ],
+    "out": ["y_pred_labels"]
+  },
+  "train": {
+    "batch_size": 8,
+    "metrics": ["accuracy"],
+    "validation_patience": 10,
+    "log_every_n_batches": 50,
+    "val_every_n_epochs": 1,
+    "log_every_n_epochs": 1,
+    "show_examples": true,
+    "evaluation_targets": ["train", "valid"],
+    "class_name": "torch_trainer",
+    "tensorboard_log_dir": "{MODEL_PATH}/",
+    "pytest_max_batches": 2,
+    "pytest_batch_size": 2
+  },
+  "metadata": {
+    "variables": {
+      "BASE_MODEL": "roberta-large",
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODEL_PATH": "{MODELS_PATH}/classifiers/winogrande_{BASE_MODEL}"
+    }
+  }
+}
